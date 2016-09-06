@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component,OnInit } from "@angular/core";
 import {MessageComponent} from "./message.component";
 import {MessageListComponent} from "./message-list.component";
 import {Message} from "./message";
@@ -12,29 +12,55 @@ import {MessageService} from "./message.service";
                      <form (ngSubmit)="onSubmit(f.value)" #f="ngForm">
                             <div class="form-group">
                                 <label for="content">Content</label>
-                                <input ngControl="content" type="text" class="form-control" id="content" let #input>
+                                <input ngControl="content" type="text" class="form-control" id="content" let #input [ngModel]="message?.content">
                             </div>
-                            <button type="submit" class="btn btn-primary">Send Message</button>
+                            <button type="submit" class="btn btn-primary">{{!message ? 'Send Message' : 'Save Message'}}</button>
+                            <button type="button" class="btn btn-danger" *ngIf="message" click="onCancel()">Cancel</button>
                     </form>
                 </section>
     `
 })
-export class MessageInputComponent {
+export class MessageInputComponent implements OnInit {
+    message: Message = null;
 
     constructor(private _messageService: MessageService){
 
     }
 
     onSubmit(form:any){
-        const message: Message = new Message(form.content,null,'Dummy');
-        this._messageService.addMessage(message)
+        if(this.message){
+            //Edit
+            this.message.content = form.content;
+            this._messageService.updateMessage(this.message)
             .subscribe(
-                data => {
-                    console.log(data);
-                    this._messageService.messages.push(data);
-                },
-                error => console.log(error)
+               data => console.log(data),
+               error => console.error(error)
+            )
+            this.message = null;
+        }else{
+            const message: Message = new Message(form.content,null,'Dummy');
+            this._messageService.addMessage(message)
+                .subscribe(
+                    data => {
+                        console.log(data);
+                        this._messageService.messages.push(data);
+                    },
+                    error => console.log(error)
             );
+        }
+
+    }
+
+    onCancel(){
+        this.message = null;
+    }
+
+    ngOnInit(){
+        this._messageService.messageIsEdit.subscribe(
+            message =>{
+                this.message = message;
+            }
+        );
     }
 
 }
