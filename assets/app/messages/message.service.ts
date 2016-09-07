@@ -8,14 +8,16 @@ import {Observable} from "rxjs/Observable";
 export class MessageService{
 	messages : Message[] = [];
 	messageIsEdit  = new EventEmitter<Message>();
+	const hostname = window.location.origin;
 
 	constructor (private _http: Http){
+		console.log(this.hostname);
 	}
 
 	addMessage(message: Message){
 		const body = JSON.stringify(message);
 		const headers = new Headers({'Content-Type':'application/json'});
-		return this._http.post('http://localhost:3000/message',body,{headers:headers})
+		return this._http.post(this.hostname + '/message',body,{headers:headers})
 				.map(response => {
 					const data = response.json().obj;
 					let message = new Message(data.content,data._id, 'Dummy', null);
@@ -25,7 +27,7 @@ export class MessageService{
 	}
 
 	getMessages(){
-		return this._http.get('http://localhost:3000/message')
+		return this._http.get(this.hostname + '/message')
 				.map(response=> {
 					const data = response.json().obj;
 					let objs: any[] = [];
@@ -42,7 +44,7 @@ export class MessageService{
 		const body = JSON.stringify(message);
 		const headers = new Headers({'Content-Type':'application/json'});
 		this.messages[this.messages.indexOf(message)] = new Message(message.content,null,'Dummy');
-		return this._http.patch('http://localhost:3000/message/' + message.messageId,body,{headers})
+		return this._http.patch(this.hostname + '/message/' + message.messageId,body,{headers})
 			   .map(response => response.json())
 			   .catch(error => Observable.throw(error.json()))
 	}
@@ -53,7 +55,7 @@ export class MessageService{
 
 	deleteMessage(message:Message){
 		this.messages.splice(this.messages.indexOf(message),1);
-		return this._http.delete('http://localhost:3000/message/' + message.messageId)
+		return this._http.delete(this.hostname + '/message/' + message.messageId)
 			   .map(response => response.json())
 			   .catch(error => Observable.throw(error.json()))
 	}
